@@ -5,11 +5,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-int main(int argc, char const* argv[]) {
-    char serv_name[] = "www.yahoo.com";
-    int serv_name_s = strlen(serv_name);
-    int serv_list_s = serv_name_s + 3;
-    int ext_serv_s = serv_list_s + 2;
+void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
+    unsigned char serv_name[] = "www.yahoo.com";
+    unsigned char serv_name_s = strlen(serv_name);
+    unsigned char serv_list_s = serv_name_s + 3;
+    unsigned char ext_serv_s = serv_list_s + 2;
 
     char ext_serv_pre[] = {
         0x00, 0x00,
@@ -18,8 +18,8 @@ int main(int argc, char const* argv[]) {
         0x00,
         0x00, serv_name_s};
 
-    int ext_serv_ss = sizeof(ext_serv_pre) + serv_name_s;
-    char* ext_serv = malloc(ext_serv_ss);
+    unsigned char ext_serv_ss = sizeof(ext_serv_pre) + serv_name_s;
+    unsigned char* ext_serv = malloc(ext_serv_ss);
     memcpy(ext_serv, ext_serv_pre, sizeof(ext_serv_pre));
     memcpy(ext_serv + sizeof(ext_serv_pre), serv_name, serv_name_s);
 
@@ -39,12 +39,12 @@ int main(int argc, char const* argv[]) {
         0x51, 0xed, 0x21, 0xa2, 0x8e, 0x3b, 0x75, 0xe9, 0x65, 0xd0,
         0xd2, 0xcd, 0x16, 0x62, 0x54};
 
-    int ext_s = ext_serv_ss + sizeof(ext_oth);
-    char* ext = malloc(ext_s);
+    unsigned char ext_s = ext_serv_ss + sizeof(ext_oth);
+    unsigned char* ext = malloc(ext_s);
     memcpy(ext, ext_serv, ext_serv_ss);
     memcpy(ext + ext_serv_ss, ext_oth, sizeof(ext_oth));
 
-    char cv_el[] = {
+    unsigned char cv_el[] = {
         0x03, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
         0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
         0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
@@ -55,8 +55,8 @@ int main(int argc, char const* argv[]) {
         0x02, 0x13, 0x03, 0x13, 0x01, 0x00, 0xff, 0x01, 0x00, 0x00,
         ext_s};
 
-    int cv_rest_s = sizeof(cv_el) + ext_s;
-    char* cv_rest = malloc(cv_rest_s);
+    unsigned char cv_rest_s = sizeof(cv_el) + ext_s;
+    unsigned char* cv_rest = malloc(cv_rest_s);
     memcpy(cv_rest, cv_el, sizeof(cv_el));
     memcpy(cv_rest + sizeof(cv_el), ext, ext_s);
 
@@ -66,10 +66,16 @@ int main(int argc, char const* argv[]) {
         0x01, 0x00,
         0x00, cv_rest_s};
 
-    int cli_hel_s = sizeof(top) + cv_rest_s;
-    char* cli_hel = malloc(cli_hel_s);
-    memcpy(cli_hel, top, sizeof(top));
-    memcpy(cli_hel + sizeof(top), cv_rest, cv_rest_s);
+    *cli_hel_s = sizeof(top) + cv_rest_s;
+    *cli_hel = malloc(*cli_hel_s);
+    memcpy(*cli_hel, top, sizeof(top));
+    memcpy(*cli_hel + sizeof(top), cv_rest, cv_rest_s);
+}
+
+int main(int argc, char const* argv[]) {
+    unsigned char* cli_hel;
+    int cli_hel_s;
+    craft_cli_hel(&cli_hel, &cli_hel_s);
 
     int sock = 0, valread, client_fd;
     struct sockaddr_in serv_addr;
