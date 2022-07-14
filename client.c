@@ -43,6 +43,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     unsigned char* ext = malloc(ext_s);
     memcpy(ext, ext_serv, ext_serv_ss);
     memcpy(ext + ext_serv_ss, ext_oth, sizeof(ext_oth));
+    free(ext_serv);
 
     unsigned char cv_el[] = {
         0x03, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -59,6 +60,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     unsigned char* cv_rest = malloc(cv_rest_s);
     memcpy(cv_rest, cv_el, sizeof(cv_el));
     memcpy(cv_rest + sizeof(cv_el), ext, ext_s);
+    free(ext);
 
     char top[] = {
         0x16, 0x03, 0x01,
@@ -70,6 +72,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     *cli_hel = malloc(*cli_hel_s);
     memcpy(*cli_hel, top, sizeof(top));
     memcpy(*cli_hel + sizeof(top), cv_rest, cv_rest_s);
+    free(cv_rest);
 }
 
 int main(int argc, char const* argv[]) {
@@ -101,8 +104,9 @@ int main(int argc, char const* argv[]) {
     send(sock, cli_hel, cli_hel_s, 0);
     printf("Hello message sent\n");
     valread = read(sock, buffer, 5000);
-    printf("%s\n", buffer);
+    printf("%d\n", valread);
 
+    free(cli_hel);
     close(client_fd);
     return 0;
 }
