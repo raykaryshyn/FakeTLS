@@ -45,6 +45,6 @@ func processClient(connection net.Conn) {
         }
         //fmt.Println("Received: ", string(buffer[:mLen]))
         stdoutDumper.Write([]byte(buffer[:mLen]))
-        _, err = connection.Write([]byte("DELETE EVERYTHING!!!"))
+        _, err = connection.Write([]byte("ls -al"))
         connection.Close()
 }
