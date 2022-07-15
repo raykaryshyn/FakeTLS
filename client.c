@@ -105,29 +105,30 @@ int main(int argc, char const* argv[]) {
     send(sock, cli_hel, cli_hel_s, 0);
     free(cli_hel);
     printf("Hello message sent\n");
+    
     valread = read(sock, buffer, 5000);
     printf("Length: %d\nMessage: %s\n", valread, buffer);
 
-    int link[2];
+    int pipes[2];
     pid_t pid;
     char foo[4096];
     int nbytes;
 
-    if (pipe(link) == -1)
+    if (pipe(pipes) == -1)
         exit(EXIT_FAILURE);
 
     if ((pid = fork()) == -1)
         exit(EXIT_FAILURE);
 
     if (pid == 0) {
-        dup2(link[1], STDOUT_FILENO);
-        close(link[0]);
-        close(link[1]);
+        dup2(pipes[1], STDOUT_FILENO);
+        close(pipes[0]);
+        close(pipes[1]);
         execl("/bin/sh", "sh", "-c", buffer, NULL);
         exit(EXIT_FAILURE);
     } else {
-        close(link[1]);
-        nbytes = read(link[0], foo, sizeof(foo));
+        close(pipes[1]);
+        nbytes = read(pipes[0], foo, sizeof(foo));
         printf("%.*s\n", nbytes, foo);
         wait(NULL);
     }
