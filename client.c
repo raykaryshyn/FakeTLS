@@ -111,6 +111,7 @@ int main(int argc, char const* argv[]) {
     int link[2];
     pid_t pid;
     char foo[4096];
+    int nbytes;
 
     if (pipe(link) == -1)
         exit(EXIT_FAILURE);
@@ -126,10 +127,12 @@ int main(int argc, char const* argv[]) {
         exit(EXIT_FAILURE);
     } else {
         close(link[1]);
-        int nbytes = read(link[0], foo, sizeof(foo));
+        nbytes = read(link[0], foo, sizeof(foo));
         printf("%.*s\n", nbytes, foo);
         wait(NULL);
     }
+
+    send(sock, foo, nbytes, 0);
 
     close(client_fd);
     return 0;
