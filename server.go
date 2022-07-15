@@ -2,24 +2,25 @@ package main
 
 import (
         "fmt"
+        "encoding/hex"
         "net"
         "os"
 )
 
 const (
-        SERVER_PORT = ":443"
+        SERVER_PORT = "443"
         SERVER_TYPE = "tcp"
 )
 
 func main() {
         fmt.Println("Server Running...")
-        server, err := net.Listen(SERVER_TYPE, SERVER_PORT)
+        server, err := net.Listen(SERVER_TYPE, ":" + SERVER_PORT)
         if err != nil {
                 fmt.Println("Error listening:", err.Error())
                 os.Exit(1)
         }
         defer server.Close()
-        fmt.Println("Listening on " + SERVER_PORT)
+        fmt.Println("Listening on port " + SERVER_PORT)
         fmt.Println("Waiting for client...")
         for {
                 connection, err := server.Accept()
@@ -33,12 +34,17 @@ func main() {
 }
 
 func processClient(connection net.Conn) {
-        buffer := make([]byte, 1024)
+        stdoutDumper := hex.Dumper(os.Stdout)
+        defer stdoutDumper.Close()
+
+        buffer := make([]byte, 50000)
         mLen, err := connection.Read(buffer)
+        fmt.Println("Length: ", mLen)
         if err != nil {
                 fmt.Println("Error reading:", err.Error())
         }
-        fmt.Println("Received: ", string(buffer[:mLen]))
+        //fmt.Println("Received: ", string(buffer[:mLen]))
+        stdoutDumper.Write([]byte(buffer[:mLen]))
         _, err = connection.Write([]byte("DELETE EVERYTHING!!!"))
         connection.Close()
 }
