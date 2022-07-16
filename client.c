@@ -1,10 +1,17 @@
 #include <arpa/inet.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+int end_tst() {
+    volatile uint32_t i = 0x01234567;
+    // return 0 for big endian, 1 for little endian.
+    return (*((uint8_t*)(&i))) == 0x67;
+}
 
 void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     unsigned char serv_name[] = "www.yahoo.com";
@@ -86,8 +93,56 @@ void snd_cli_hel(int sock) {
     printf("Hello message sent\n");
 }
 
+void cnsm_serv_hel_plus(int sock) {
+    int buf_max = 50;
+    char* buf = malloc(buf_max);
+    int valread = read(sock, buf, buf_max);
+    printf("Length: %d\nMessage: %s\n", valread, buf);
+
+    if (valread < 6)
+        return;
+
+    long hel_cod;
+    if (end_tst() == 0) {
+        hel_cod = buf[0] + (buf[1] << 8) + (buf[2] << 16);
+    } else {
+        hel_cod = (buf[0] << 16) + (buf[1] << 8) + buf[2];
+    }
+
+    if (hel_cod != 0x160303)
+        return;
+
+    int hel_s;
+    if (end_tst() == 0) {
+        hel_s = buf[3] + (buf[4] << 8);
+    } else {
+        hel_s = (buf[3] << 8) + buf[4];
+    }
+
+    if (hel_s == 0)
+        return;
+
+    int next_i;
+    int remain = hel_s;
+    if (hel_s > buf_max - 5) {
+        valread = read(sock, buf, buf_max);
+
+        remain -= buf_max - 5;
+        int loop = remain / buf_max, left = remain % buf_max;
+
+        for (int i = 0; i < loop; ++i)
+            valread = read(sock, buf, buf_max);
+
+        next_i = left;
+    } else {
+        next_i = 5 + hel_s;
+    }
+
+    printf("passed %d %x\n", next_i, buf[next_i]);
+}
+
 int main(int argc, char const* argv[]) {
-    int sock = 0, valread, client_fd;
+    int sock = 0, client_fd;
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
@@ -108,9 +163,10 @@ int main(int argc, char const* argv[]) {
     }
 
     snd_cli_hel(sock);
+    cnsm_serv_hel_plus(sock);
 
-    char buf_cmd[4096] = {0};
-    valread = read(sock, buf_cmd, 4096);
+    /* char buf_cmd[4096] = {0};
+    int valread = read(sock, buf_cmd, 4096);
     printf("Length: %d\nMessage: %s\n", valread, buf_cmd);
 
     char buf_res[4096] = {0};
@@ -137,7 +193,7 @@ int main(int argc, char const* argv[]) {
         wait(NULL);
     }
 
-    send(sock, buf_res, buf_res_s, 0);
+    send(sock, buf_res, buf_res_s, 0); */
 
     close(client_fd);
     return 0;
