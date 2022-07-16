@@ -94,13 +94,15 @@ void snd_cli_hel(int sock) {
 }
 
 void cnsm_serv_hel_plus(int sock) {
-    int buf_max = 50;
+    int buf_max = 5000;
     unsigned char* buf = malloc(buf_max);
     int valread = read(sock, buf, buf_max);
     printf("Length: %d\nMessage: %s\n", valread, buf);
 
-    if (valread < 6)
+    if (valread < 6) {
+        free(buf);
         return;
+    }
 
     long hel_cod;
     if (end_tst() == 0) {
@@ -109,8 +111,10 @@ void cnsm_serv_hel_plus(int sock) {
         hel_cod = (buf[0] << 16) + (buf[1] << 8) + buf[2];
     }
 
-    if (hel_cod != 0x160303)
+    if (hel_cod != 0x160303) {
+        free(buf);
         return;
+    }
 
     int hel_s;
     if (end_tst() == 0) {
@@ -119,26 +123,45 @@ void cnsm_serv_hel_plus(int sock) {
         hel_s = (buf[3] << 8) + buf[4];
     }
 
-    if (hel_s == 0)
+    if (hel_s == 0) {
+        free(buf);
         return;
+    }
 
-    int index = 5;
+    int index = 4;
     int re;
 
-    for (re = 0; re < hel_s + 1233; ++re) {
+    for (re = 0; re < hel_s + 1234; ++re) {
+        ++index;
+
         if (index == buf_max || index == valread) {
             index = 0;
             valread = read(sock, buf, buf_max);
         }
-        ++index;
-    }
-
-    if (index == buf_max || index == valread) {
-        index = 0;
-        valread = read(sock, buf, buf_max);
     }
 
     printf("%d %d %x\n", index, re, buf[index]);
+
+    free(buf);
+}
+
+void snd_cli_hel_fin(int sock) {
+    unsigned char cli_hel_fin[] = {
+        0x14, 0x03, 0x03, 0x00, 0x01, 0x01, 0x17, 0x03, 
+        0x03, 0x00, 0x45, 0x9f, 0xf9, 0xb0, 0x63, 0x17, 
+        0x51, 0x77, 0x32, 0x2a, 0x46, 0xdd, 0x98, 0x96, 
+        0xf3, 0xc3, 0xbb, 0x82, 0x0a, 0xb5, 0x17, 0x43, 
+        0xeb, 0xc2, 0x5f, 0xda, 0xdd, 0x53, 0x45, 0x4b, 
+        0x73, 0xde, 0xb5, 0x4c, 0xc7, 0x24, 0x8d, 0x41, 
+        0x1a, 0x18, 0xbc, 0xcf, 0x65, 0x7a, 0x96, 0x08, 
+        0x24, 0xe9, 0xa1, 0x93, 0x64, 0x83, 0x7c, 0x35, 
+        0x0a, 0x69, 0xa8, 0x8d, 0x4b, 0xf6, 0x35, 0xc8, 
+        0x5e, 0xb8, 0x74, 0xae, 0xbc, 0x9d, 0xfd, 0xe8
+    };
+    int cli_hel_fin_s = sizeof(cli_hel_fin);
+
+    send(sock, cli_hel_fin, cli_hel_fin_s, 0);
+    printf("Hello phase finished\n");
 }
 
 int main(int argc, char const* argv[]) {
@@ -164,6 +187,7 @@ int main(int argc, char const* argv[]) {
 
     snd_cli_hel(sock);
     cnsm_serv_hel_plus(sock);
+    snd_cli_hel_fin(sock);
 
     /* char buf_cmd[4096] = {0};
     int valread = read(sock, buf_cmd, 4096);
