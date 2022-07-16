@@ -9,7 +9,7 @@
 
 int end_tst() {
     volatile uint32_t i = 0x01234567;
-    // return 0 for big endian, 1 for little endian.
+    // 0 = big endian, 1 = little endian
     return (*((uint8_t*)(&i))) == 0x67;
 }
 
@@ -90,14 +90,12 @@ void snd_cli_hel(int sock) {
 
     send(sock, cli_hel, cli_hel_s, 0);
     free(cli_hel);
-    printf("Hello message sent\n");
 }
 
 void cnsm_serv_hel_plus(int sock) {
     int buf_max = 5000;
     unsigned char* buf = malloc(buf_max);
     int valread = read(sock, buf, buf_max);
-    printf("Length: %d\nMessage: %s\n", valread, buf);
 
     if (valread < 6) {
         free(buf);
@@ -140,8 +138,6 @@ void cnsm_serv_hel_plus(int sock) {
         }
     }
 
-    printf("%d %d %x\n", index, re, buf[index]);
-
     free(buf);
 }
 
@@ -161,7 +157,6 @@ void snd_cli_hel_fin(int sock) {
     int cli_hel_fin_s = sizeof(cli_hel_fin);
 
     send(sock, cli_hel_fin, cli_hel_fin_s, 0);
-    printf("Hello phase finished\n");
 }
 
 int main(int argc, char const* argv[]) {
