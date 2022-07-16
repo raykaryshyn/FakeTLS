@@ -127,15 +127,16 @@ void cnsm_serv_hel_plus(int sock) {
 
     for (re = 0; re < hel_s + 1233; ++re) {
         if (index == buf_max || index == valread) {
-            if (index == buf_max)
-                index = 0;
+            index = 0;
             valread = read(sock, buf, buf_max);
         }
         ++index;
     }
 
-    if (index == valread)
-        valread = read(sock, buf + index, buf_max - index);
+    if (index == buf_max || index == valread) {
+        index = 0;
+        valread = read(sock, buf, buf_max);
+    }
 
     printf("%d %d %x\n", index, re, buf[index]);
 }
