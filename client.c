@@ -125,7 +125,7 @@ void cnsm_serv_hel_plus(int sock) {
     int index = 5;
     int re;
 
-    for (re = 0; re < hel_s; ++re) {
+    for (re = 0; re < hel_s + 1233; ++re) {
         if (index == buf_max || index == valread) {
             if (index == buf_max)
                 index = 0;
