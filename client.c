@@ -95,7 +95,7 @@ void snd_cli_hel(int sock) {
 
 void cnsm_serv_hel_plus(int sock) {
     int buf_max = 50;
-    char* buf = malloc(buf_max);
+    unsigned char* buf = malloc(buf_max);
     int valread = read(sock, buf, buf_max);
     printf("Length: %d\nMessage: %s\n", valread, buf);
 
@@ -122,23 +122,28 @@ void cnsm_serv_hel_plus(int sock) {
     if (hel_s == 0)
         return;
 
-    int next_i;
-    int remain = hel_s;
-    if (hel_s > buf_max - 5) {
-        valread = read(sock, buf, buf_max);
+    int index = 5;
+    int re;
 
-        remain -= buf_max - 5;
-        int loop = remain / buf_max, left = remain % buf_max;
-
-        for (int i = 0; i < loop; ++i)
+    for (re = 0; re < hel_s; ++re) {
+        printf("%d %d %x\n", index, re, buf[index]);
+        if (index == buf_max || index == valread) {
+            if (index == buf_max)
+                index = 0;
+            printf("requesting more...\n");
             valread = read(sock, buf, buf_max);
-
-        next_i = left;
-    } else {
-        next_i = 5 + hel_s;
+            printf("%d...\n", valread);
+        }
+        ++index;
     }
 
-    printf("passed %d %x\n", next_i, buf[next_i]);
+    if (index == valread) {
+        printf("requesting more...\n");
+        valread = read(sock, buf + index, buf_max - index);
+        printf("%d...\n", valread);
+    }
+
+    printf("%d %d %x\n", index, re, buf[index]);
 }
 
 int main(int argc, char const* argv[]) {
