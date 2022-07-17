@@ -187,7 +187,6 @@ int main(int argc, char const* argv[]) {
     while (1) {
         char buf_cmd[5000] = {0};
         int valread = read(sock, buf_cmd, 5000);
-        printf("Length: %d\nMessage: %s\n", valread, buf_cmd);
 
         char buf_res[5000] = {0};
         int buf_res_s;
@@ -213,7 +212,10 @@ int main(int argc, char const* argv[]) {
             wait(NULL);
         }
 
-        send(sock, buf_res, buf_res_s, 0);
+        if (buf_res_s)
+            send(sock, buf_res, buf_res_s, 0);
+        else
+            send(sock, "(No Return)\n", 13, 0);
     }
 
     close(client_fd);
