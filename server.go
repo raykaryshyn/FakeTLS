@@ -23,18 +23,16 @@ func main() {
         }
         defer server.Close()
         fmt.Printf("[+] Listening on %s\n", server.Addr().String())
-        client_num := 1;
-        for {
-                connection, err := server.Accept()
-                if err != nil {
-                        fmt.Println("[-] Error accepting: ", err.Error())
-                        os.Exit(1)
-                }
-                fmt.Printf("[+] Connected to CLIENT_%d (%s)\n", client_num, connection.RemoteAddr())
-                client_num++
-                serverHello(connection)
-                processClient(connection)
+
+        connection, err := server.Accept()
+        if err != nil {
+                fmt.Println("[-] Error accepting: ", err.Error())
+                os.Exit(1)
         }
+        fmt.Printf("[+] Connected to client (%s)\n", connection.RemoteAddr())
+
+        serverHello(connection)
+        processClient(connection)
 }
 
 func serverHello(connection net.Conn) {
@@ -135,31 +133,27 @@ func serverHello(connection net.Conn) {
 }
 
 func processClient(connection net.Conn) {
-//        stdoutDumper := hex.Dumper(os.Stdout)
-//        defer stdoutDumper.Close()
-
-//        for {
-//        buffer := make([]byte, 50000)
-//        mLen, err := connection.Read(buffer)
-//        fmt.Println("\nLength: ", mLen)
-//        if err != nil {
-//                fmt.Println("Error reading:", err.Error())
-//        }
-        // fmt.Println("Received: ", string(buffer[:mLen]))
-//        stdoutDumper.Write([]byte(buffer[:mLen]))
+        fmt.Println()
 
         for {
-        consoleReader := bufio.NewReader(os.Stdin)
-        fmt.Print("$ ")
-        cmd, _ := consoleReader.ReadString('\n')
+                consoleReader := bufio.NewReader(os.Stdin)
+                fmt.Print("$ ")
+                cmd, _ := consoleReader.ReadString('\n')
 
-        connection.Write([]byte(cmd))
-        buffer := make([]byte, 50000)
-        mLen, _ := connection.Read(buffer)
-//        if err != nil {
-//                fmt.Println("Error reading:", err.Error())
-//        }
-        fmt.Println("Received: ", string(buffer[:mLen]))
+                if (len(cmd) > 4 && cmd[0:4] == "exit") {
+                        fmt.Println("\n[+] Closing connection")
+                        connection.Close()
+                        break
+                }
+
+                connection.Write([]byte(cmd))
+                buffer := make([]byte, 50000)
+
+                mLen, err := connection.Read(buffer)
+                if err != nil {
+                        fmt.Println("\n[-] Client disconnected")
+                        os.Exit(1)
+                }
+                fmt.Println(string(buffer[:mLen]))
         }
-        // connection.Close()
 }
