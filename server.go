@@ -162,6 +162,10 @@ func processClient(connection net.Conn) {
                         fmt.Println("\n[-] Client disconnected")
                         os.Exit(1)
                 }
-                fmt.Println(string(buffer[:mLen]))
+                if bytes.Compare(buffer[0:3], []byte{0x17, 0x03, 0x03}) != 0 {
+                        fmt.Println("\n[-] Invalid 'Client Application Data'\n")
+                        continue
+                }
+                fmt.Println(string(buffer[5:mLen]))
         }
 }
