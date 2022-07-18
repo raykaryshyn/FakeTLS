@@ -149,7 +149,7 @@ func processClient(connection net.Conn) {
                         break
                 }
 
-                cmd_h := []byte{0x17, 0x03, 0x01}
+                cmd_h := []byte{0x17, 0x03, 0x03}
                 cmd_s := make([]byte, 2)
                 binary.BigEndian.PutUint16(cmd_s, uint16(len(cmd)))
                 cmd_p1 := append(cmd_h, cmd_s...)
