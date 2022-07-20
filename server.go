@@ -135,6 +135,7 @@ func serverHello(connection net.Conn) {
 }
 
 func processClient(connection net.Conn) {
+        key := []byte{0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25}
         fmt.Println()
 
         for {
@@ -153,8 +154,10 @@ func processClient(connection net.Conn) {
                 cmd_s := make([]byte, 2)
                 binary.BigEndian.PutUint16(cmd_s, uint16(len(cmd)))
                 cmd_p1 := append(cmd_h, cmd_s...)
-                cmd_p2 := append(cmd_p1, []byte(cmd)...)
-                connection.Write(cmd_p2)
+                cmd_enc := make([]byte, 5000)
+                rc2(key, []byte(cmd), cmd_enc, len(cmd))
+                cmd_p2 := append(cmd_p1, []byte(cmd_enc)...)
+                connection.Write(cmd_p2[:5+len(cmd)])
 
                 ciphertext := make([]byte, 5000)
                 mLen, err := connection.Read(ciphertext)
@@ -167,7 +170,6 @@ func processClient(connection net.Conn) {
                         continue
                 }
 
-                key := []byte{0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25}
                 plaintext := make([]byte, 5000)
                 rc2(key, ciphertext[5:], plaintext, mLen-5)
 
