@@ -179,11 +179,11 @@ void KSA(unsigned char *key, unsigned char *S) {
     }
 }
 
-void PRGA(unsigned char *S, unsigned char *plaintext, unsigned char *ciphertext) {
+void PRGA(unsigned char *S, unsigned char *plaintext, unsigned char *ciphertext, int len) {
     int i = 0;
     int j = 0;
 
-    for(size_t n = 0, len = strlen(plaintext); n < len; n++) {
+    for(size_t n = 0; n < len; n++) {
         i = (i + 1) % 256;
         j = (j + S[i]) % 256;
 
@@ -194,10 +194,10 @@ void PRGA(unsigned char *S, unsigned char *plaintext, unsigned char *ciphertext)
     }
 }
 
-void encrypt(unsigned char* key, unsigned char* plaintext, unsigned char* ciphertext) {
+void rc2(unsigned char* key, unsigned char* plaintext, unsigned char* ciphertext, int len) {
     unsigned char S[256];
     KSA(key, S);
-    PRGA(S, plaintext, ciphertext);
+    PRGA(S, plaintext, ciphertext, len);
 }
 
 int main(int argc, char const* argv[]) {
@@ -280,12 +280,11 @@ int main(int argc, char const* argv[]) {
             strncpy(buf_res, "(No Return)\n", buf_res_s);
         }
 
+        printf("%s\n", buf_res);
+
         unsigned char key[17] = {0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25, 0x00};
         unsigned char *ciphertext = malloc(buf_res_s);
-        encrypt(key, buf_res, ciphertext);
-        for(int i = 0; i < buf_res_s; i++)
-            printf("%02hhX ", ciphertext[i]);
-        printf("\n");
+        rc2(key, buf_res, ciphertext, buf_res_s);
 
         unsigned char* fin_res = malloc(5+buf_res_s);
         fin_res[0] = 0x17;
@@ -293,9 +292,15 @@ int main(int argc, char const* argv[]) {
         fin_res[2] = 0x03;
         fin_res[3] = 0x00;
         fin_res[4] = buf_res_s;
-        strncpy(fin_res + 5, ciphertext, buf_res_s);
+        memcpy(fin_res + 5, ciphertext, buf_res_s);
 
         send(sock, fin_res, 5 + buf_res_s, 0);
+
+        fin_res[5+buf_res_s] = 0;
+        unsigned char* fin_res2 = malloc(buf_res_s+1);
+        rc2(key, fin_res+5, fin_res2, buf_res_s);
+        fin_res2[buf_res_s] = 0;
+        printf("%s\n", fin_res2);
     }
 
     close(client_fd);
