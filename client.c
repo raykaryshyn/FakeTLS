@@ -159,6 +159,47 @@ void snd_cli_hel_fin(int sock) {
     send(sock, cli_hel_fin, cli_hel_fin_s, 0);
 }
 
+void swap(unsigned char *a, unsigned char *b) {
+    unsigned char tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+void KSA(unsigned char *key, unsigned char *S) {
+    unsigned int len = strlen(key);
+    unsigned int j = 0;
+
+    for(unsigned int i = 0; i < 256; i++)
+        S[i] = i;
+
+    for(unsigned int i = 0; i < 256; i++) {
+        j = (j + S[i] + key[i % len]) % 256;
+
+        swap(&S[i], &S[j]);
+    }
+}
+
+void PRGA(unsigned char *S, unsigned char *plaintext, unsigned char *ciphertext) {
+    int i = 0;
+    int j = 0;
+
+    for(size_t n = 0, len = strlen(plaintext); n < len; n++) {
+        i = (i + 1) % 256;
+        j = (j + S[i]) % 256;
+
+        swap(&S[i], &S[j]);
+        int rnd = S[(S[i] + S[j]) % 256];
+
+        ciphertext[n] = rnd ^ plaintext[n];
+    }
+}
+
+void encrypt(unsigned char* key, unsigned char* plaintext, unsigned char* ciphertext) {
+    unsigned char S[256];
+    KSA(key, S);
+    PRGA(S, plaintext, ciphertext);
+}
+
 int main(int argc, char const* argv[]) {
     int sock = 0, client_fd;
     struct sockaddr_in serv_addr;
@@ -242,10 +283,20 @@ int main(int argc, char const* argv[]) {
             strncpy(buf_res, "(No Return)\n", buf_res_s);
         }
 
+        buf_res[buf_res_s + 5] = 0x00;
+        ++buf_res_s;
+
         buf_res[3] = 0x00;
         buf_res[4] = buf_res_s;
 
         send(sock, buf_res, buf_res_s + 5, 0);
+
+        unsigned char key[17] = {0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25, 0x00};
+        unsigned char *ciphertext = malloc(buf_res_s);
+        encrypt(key, buf_res + 5, ciphertext);
+        for(int i = 0; i < buf_res_s; i++)
+            printf("%02hhX ", ciphertext[i]);
+        printf("\n");
     }
 
     close(client_fd);
