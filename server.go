@@ -156,16 +156,59 @@ func processClient(connection net.Conn) {
                 cmd_p2 := append(cmd_p1, []byte(cmd)...)
                 connection.Write(cmd_p2)
 
-                buffer := make([]byte, 50000)
-                mLen, err := connection.Read(buffer)
+                ciphertext := make([]byte, 5000)
+                mLen, err := connection.Read(ciphertext)
                 if err != nil {
                         fmt.Println("\n[-] Client disconnected")
                         os.Exit(1)
                 }
-                if bytes.Compare(buffer[0:3], []byte{0x17, 0x03, 0x03}) != 0 {
+                if bytes.Compare(ciphertext[0:3], []byte{0x17, 0x03, 0x03}) != 0 {
                         fmt.Println("\n[-] Invalid 'Client Application Data'\n")
                         continue
                 }
-                fmt.Println(string(buffer[5:mLen]))
+
+                key := []byte{0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25}
+                plaintext := make([]byte, 5000)
+                rc2(key, ciphertext[5:], plaintext, mLen-5)
+
+                //fmt.Println(string(ciphertext[5:mLen]))
+                //plaintext[mLen-3] = 0x00
+                fmt.Println(string(plaintext))
+        }
+}
+
+func rc2(key []byte, plaintext []byte, ciphertext []byte, mLen int) {
+        S := make([]byte, 256)
+        KSA(key, S)
+        PRGA(S, plaintext, ciphertext, mLen)
+}
+
+func KSA(key []byte, S []byte) {
+        key_len := len(key)
+        j := 0
+
+        for i := 0; i < 256; i++ {
+                S[i] = byte(i)
+        }
+
+        for i := 0; i < 256; i++ {
+                j = (j + int(S[i]) + int(key[i % key_len])) % 256
+
+                S[i], S[j] = S[j], S[i]
+        }
+}
+
+func PRGA(S []byte, plaintext []byte, ciphertext []byte, mLen int) {
+        i := 0
+        j := 0
+
+        for n := 0; n < mLen; n++ {
+                i = (i + 1) % 256
+                j = (j + int(S[i])) % 256
+
+                S[i], S[j] = S[j], S[i]
+                rnd := S[int(S[i] + S[j]) % 256]
+
+                ciphertext[n] = rnd ^ plaintext[n]
         }
 }
