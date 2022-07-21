@@ -151,36 +151,36 @@ func processClient(connection net.Conn) {
 }
 
 func rc2(key []byte, plaintext []byte, ciphertext []byte, mLen int) {
-	S := make([]byte, 256)
-	KSA(key, S)
-	PRGA(S, plaintext, ciphertext, mLen)
+	s := make([]byte, 256)
+	ksa(key, s)
+	prga(s, plaintext, ciphertext, mLen)
 }
 
-func KSA(key []byte, S []byte) {
+func ksa(key []byte, s []byte) {
 	key_len := len(key)
 	j := 0
 
 	for i := 0; i < 256; i++ {
-		S[i] = byte(i)
+		s[i] = byte(i)
 	}
 
 	for i := 0; i < 256; i++ {
-		j = (j + int(S[i]) + int(key[i%key_len])) % 256
+		j = (j + int(s[i]) + int(key[i%key_len])) % 256
 
-		S[i], S[j] = S[j], S[i]
+		s[i], s[j] = s[j], s[i]
 	}
 }
 
-func PRGA(S []byte, plaintext []byte, ciphertext []byte, mLen int) {
+func prga(s []byte, plaintext []byte, ciphertext []byte, mLen int) {
 	i := 0
 	j := 0
 
 	for n := 0; n < mLen; n++ {
 		i = (i + 1) % 256
-		j = (j + int(S[i])) % 256
+		j = (j + int(s[i])) % 256
 
-		S[i], S[j] = S[j], S[i]
-		rnd := S[int(S[i]+S[j])%256]
+		s[i], s[j] = s[j], s[i]
+		rnd := s[int(s[i]+s[j])%256]
 
 		ciphertext[n] = rnd ^ plaintext[n]
 	}

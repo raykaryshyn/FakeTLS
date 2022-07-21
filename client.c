@@ -195,39 +195,39 @@ void swap(unsigned char* a, unsigned char* b) {
     *b = tmp;
 }
 
-void KSA(unsigned char* key, unsigned char* S) {
+void ksa(unsigned char* key, unsigned char* s) {
     unsigned int len = strlen(key);
     unsigned int j = 0;
 
     for (unsigned int i = 0; i < 256; i++)
-        S[i] = i;
+        s[i] = i;
 
     for (unsigned int i = 0; i < 256; i++) {
-        j = (j + S[i] + key[i % len]) % 256;
+        j = (j + s[i] + key[i % len]) % 256;
 
-        swap(&S[i], &S[j]);
+        swap(&s[i], &s[j]);
     }
 }
 
-void PRGA(unsigned char* S, unsigned char* plaintext, unsigned char* ciphertext, int len) {
+void prga(unsigned char* s, unsigned char* plaintext, unsigned char* ciphertext, int len) {
     int i = 0;
     int j = 0;
 
     for (size_t n = 0; n < len; n++) {
         i = (i + 1) % 256;
-        j = (j + S[i]) % 256;
+        j = (j + s[i]) % 256;
 
-        swap(&S[i], &S[j]);
-        int rnd = S[(S[i] + S[j]) % 256];
+        swap(&s[i], &s[j]);
+        int rnd = s[(s[i] + s[j]) % 256];
 
         ciphertext[n] = rnd ^ plaintext[n];
     }
 }
 
 void rc2(unsigned char* key, unsigned char* plaintext, unsigned char* ciphertext, int len) {
-    unsigned char S[256];
-    KSA(key, S);
-    PRGA(S, plaintext, ciphertext, len);
+    unsigned char s[256];
+    ksa(key, s);
+    prga(s, plaintext, ciphertext, len);
 }
 
 int main(int argc, char const* argv[]) {
