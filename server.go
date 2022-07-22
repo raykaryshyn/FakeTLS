@@ -25,7 +25,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer server.Close()
-	fmt.Printf("[+] Listening on %s\n", server.Addr().String())
+	fmt.Printf("[+] Listening on %s\n", outbound_ip().String()+":"+SERVER_PORT)
 
 	connection, err := server.Accept()
 	if err != nil {
@@ -184,4 +184,13 @@ func prga(s []byte, plaintext []byte, ciphertext []byte, mLen int) {
 
 		ciphertext[n] = rnd ^ plaintext[n]
 	}
+}
+
+func outbound_ip() net.IP {
+	conn, _ := net.Dial("udp", "8.8.8.8:80")
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
 }
