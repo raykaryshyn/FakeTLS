@@ -74,7 +74,6 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
 
     unsigned char* cv_el_r1 = malloc(32);
     unsigned char* cv_el_r2 = malloc(32);
-    srand(time(0));
     for (int i = 0; i < 32; i++) {
         cv_el_r1[i] = rand();
         cv_el_r2[i] = rand();
@@ -178,7 +177,6 @@ void snd_cli_hel_fin(int sock) {
         0x14, 0x03, 0x03, 0x00, 0x01, 0x01, 0x17, 0x03,
         0x03, 0x00, 0x45};
     unsigned char* cli_hel_fin_p2 = malloc(69);
-    srand(time(0));
     for (int i = 0; i < 69; i++) {
         cli_hel_fin_p2[i] = rand();
     }
