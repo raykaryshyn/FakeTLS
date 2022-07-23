@@ -58,7 +58,6 @@ void craft_cli_hel(unsigned char** cli_hel, int* cli_hel_s) {
         0x51, 0xed, 0x21, 0xa2, 0x8e, 0x3b, 0x75, 0xe9, 0x65, 0xd0,
         0xd2, 0xcd, 0x16, 0x62, 0x54};
     unsigned char* ext_oth_p2 = malloc(32);
-    srand(time(0));
     for (int i = 0; i < 32; i++) {
         ext_oth_p2[i] = rand();
     }
