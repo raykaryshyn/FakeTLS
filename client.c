@@ -8,6 +8,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#define SERVER_IP "69.164.213.89"
+#define SERVER_PORT 443
+
 int end_tst() {
     volatile uint32_t i = 0x01234567;
     // 0 = big endian, 1 = little endian
@@ -231,21 +234,21 @@ int main(int argc, char const* argv[]) {
     int sock = 0, client_fd;
     struct sockaddr_in serv_addr;
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-        printf("\n Socket creation error \n");
-        return -1;
+        printf("Socket creation error\n");
+        return 1;
     }
 
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(443);
+    serv_addr.sin_port = htons(SERVER_PORT);
 
-    if (inet_pton(AF_INET, "69.164.213.89", &serv_addr.sin_addr) <= 0) {
-        printf("\nInvalid address/ Address not supported \n");
-        return -1;
+    if (inet_pton(AF_INET, SERVER_IP, &serv_addr.sin_addr) <= 0) {
+        printf("Invalid address: Address not supported\n");
+        return 1;
     }
 
     if ((client_fd = connect(sock, (struct sockaddr*)&serv_addr, sizeof(serv_addr))) < 0) {
-        printf("\nConnection Failed \n");
-        return -1;
+        printf("Connection Failed\n");
+        return 1;
     }
 
     snd_cli_hel(sock);
