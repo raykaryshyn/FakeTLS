@@ -10,11 +10,11 @@ Directly below are two screenshots that show:
 2. A Wireshark packet capture of the completed handshake between the attacker (64.164.213.89) and the victim (10.0.2.15).
 
 <p align="center">
-  <img src="./_images/server-after-handshake.PNG" width="738">
+  <img src="./_images/server-after-handshake.PNG">
 </p>
 
 <p align="center">
-  <img src="./_images/wireshark-handshake.PNG" width="738">
+  <img src="./_images/wireshark-handshake.PNG">
 </p>
 
 ## Compiling and Running
@@ -33,16 +33,25 @@ Directly below are two screenshots that show:
 - Compile the client binary by running `make client`.
 - Run the client with `./client`.
 
-## Usage
+## Usage and Details
+
+Below is a screenshot that demonstrates the implications of an attacker using the shell functionality to gather information on the victim, the compromised device, and any files containing sensitive information.
 
 <p align="center">
-  <img src="./_images/reverse-shell-demo.PNG" width="738">
+  <img src="./_images/reverse-shell-demo.PNG">
+</p>
+
+The following are some Wireshark captures of:
+
+1. Sending an encrypted command of `ls`.
+2. An encrypted response from the victim's device listing files in the current directory.
+
+<p align="center">
+  <img src="./_images/ls-command.PNG">
 </p>
 
 <p align="center">
-  <img src="./_images/ls-command.PNG" width="738">
+  <img src="./_images/ls-response.PNG">
 </p>
 
-<p align="center">
-  <img src="./_images/ls-response.PNG" width="738">
-</p>
+Encryption of FakeTLS command and responses is done with RC4 using the following key: `79 E1 0A 5D 87 7D 9F F7 5D 12 2E 11 65 AC E3 25`.
