@@ -1,6 +1,8 @@
 # An Implementation of FakeTLS
 
 The goal of this project was to create a simple C2 server (*server.go*) and corresponding victim malware (*client.c*) that utilizes the technique of FakeTLS to disguise shell commands and responses.
+Some more background information and a high-level walkthrough of the project is available in the following Medium article:
+<https://medium.com/@raykaryshyn/an-implementation-of-faketls-85b94f496d72>.
 
 Directly below are two screenshots that show:
 
